@@ -41,15 +41,13 @@ void setup() {
 
   setFanspeed(LOW_SPEED);
 
+  // Setup our buttons and leds
   digitalWrite(EMERGENCY_LED, HIGH);
   pinMode(EMERGENCY_PIN, INPUT_PULLUP);
-
   digitalWrite(FULLSPEED_LED, LOW);
   pinMode(FULLSPEED_PIN, INPUT_PULLUP);
 
   sensors.begin();
-
-  // TEMP SETUP
   Serial.begin(9600);
 }
 
@@ -96,7 +94,7 @@ void setFanspeed(int speed_front, int speed_back) {
   Serial.print(speed_front);
   Serial.print(" Speed back: ");
   Serial.println(speed_back);
-  
+
   setFanspeedFront(speed_front);
   setFanspeedBack(speed_back);
 }
