@@ -4,6 +4,7 @@
 const word PWM_FREQ_HZ = 25000;
 const word TCNT1_TOP = 16000000 / (2 * PWM_FREQ_HZ);
 
+#define ULTRALOW_TEMP 21
 #define LOW_TEMP 21.5
 #define RAMP_TEMP 22
 #define HIGH_TEMP 28
@@ -12,8 +13,8 @@ const word TCNT1_TOP = 16000000 / (2 * PWM_FREQ_HZ);
 #define BACK_ON_OFFSET 2
 
 #define EMERGENCY_SPEED 0
-#define FULLSPEED_SPEED 100
-#define LOW_SPEED 35
+#define LOW_SPEED 40
+#define ULTRALOW_SPEED 30
 #define RAMP_SPEED 50
 
 #define ONE_WIRE_BUS 7
@@ -48,7 +49,7 @@ void setup() {
   setFanspeed(LOW_SPEED);
 
   // Setup our buttons and leds
-  digitalWrite(EMERGENCY_LED, HIGH);
+  digitalWrite(EMERGENCY_LED, LOW);
   pinMode(EMERGENCY_PIN, INPUT_PULLUP);
   digitalWrite(FULLSPEED_LED, LOW);
   pinMode(FULLSPEED_PIN, INPUT_PULLUP);
@@ -61,23 +62,37 @@ void loop() {
   int front_fanspeed, back_fanspeed = 0;
   attachInterrupt(digitalPinToInterrupt(EMERGENCY_PIN), switchEmergency, RISING);
   attachInterrupt(digitalPinToInterrupt(FULLSPEED_PIN), switchFullSpeed, RISING);
-  digitalWrite(EMERGENCY_LED, LOW);
 
   float temperature = measureTemp();
   Serial.print("Temperature: ");
   Serial.println(temperature);
+
 
   if (emergency_mode) {
     setFanspeed(EMERGENCY_SPEED);
     delay(250);
     digitalWrite(EMERGENCY_LED, HIGH);
     delay(250);
+    digitalWrite(EMERGENCY_LED, LOW);
+
     Serial.println("EMERGENCY STOP");
+    Serial.println();
+  }
+  else if (full_speed_mode) {
+    setFanspeed(100);
+    delay(250);
+    digitalWrite(FULLSPEED_LED, HIGH);
+    delay(250);
+    digitalWrite(FULLSPEED_LED, LOW);
+    Serial.println("FULL SPEED");
     Serial.println();
   }
   else  {
     front_fanspeed = getFanSpeed(temperature, "front");
     back_fanspeed = getFanSpeed(temperature, "back");
+
+    if(ramped) digitalWrite(FULLSPEED_LED, HIGH);
+    else digitalWrite(FULLSPEED_LED, LOW);
 
     Serial.print("Speed front: ");
     Serial.print(front_fanspeed);
@@ -89,7 +104,7 @@ void loop() {
 
     setFanspeed(front_fanspeed, back_fanspeed);
     Serial.println();
-    delay((temperature > RAMP_TEMP ? 10000 : 20000));
+    delay((ramped ? 10000 : 20000));
   }
   
 }
@@ -112,20 +127,19 @@ void setFanspeed(int speed_front, int speed_back) {
 }
 
 int getFanSpeed(float temperature, String position) {
-  int fanspeed = LOW_SPEED;
+  int fanspeed = (temperature < ULTRALOW_TEMP ? ULTRALOW_SPEED : LOW_SPEED);
+  
   int OFF_TEMP = (position == "front" ? OFF_FRONT_TEMP : OFF_BACK_TEMP);  
+  
   if(ramped && temperature < LOW_TEMP) ramped = false;
-
-  if (full_speed_mode) return 100;
 
   if (temperature > HIGH_TEMP) {
     fanspeed = 100;
   }
   else if (temperature >= RAMP_TEMP || ramped) {
     fanspeed = RAMP_SPEED;
-    fanspeed += ceil(((100 - RAMP_SPEED) / (HIGH_TEMP - RAMP_TEMP)) * (temperature - RAMP_TEMP));
+    fanspeed += ceil(((100 - RAMP_SPEED) / (HIGH_TEMP - RAMP_TEMP)) * (ceil(temperature) - RAMP_TEMP));
     ramped = true;
-
     if(fanspeed < RAMP_SPEED) fanspeed = RAMP_SPEED;
   }
 
@@ -174,6 +188,5 @@ void switchFullSpeed() {
   digitalWrite(EMERGENCY_LED, LOW);
 
   digitalWrite(FULLSPEED_LED, (full_speed_mode ? HIGH : LOW));
-  setFanspeedFront((full_speed_mode ? FULLSPEED_SPEED : LOW_SPEED));
-  setFanspeedBack((full_speed_mode ? FULLSPEED_SPEED : LOW_SPEED));
+  setFanspeed((full_speed_mode ? 100 : LOW_SPEED));
 }
