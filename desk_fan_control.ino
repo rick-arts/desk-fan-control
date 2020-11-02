@@ -7,7 +7,7 @@ const word TCNT1_TOP = 16000000 / (2 * PWM_FREQ_HZ);
 #define ULTRALOW_TEMP 21
 #define LOW_TEMP 21.5
 #define RAMP_TEMP 22
-#define HIGH_TEMP 28
+#define HIGH_TEMP 26
 #define OFF_FRONT_TEMP 15
 #define OFF_BACK_TEMP 10
 #define BACK_ON_OFFSET 2
@@ -15,7 +15,7 @@ const word TCNT1_TOP = 16000000 / (2 * PWM_FREQ_HZ);
 #define EMERGENCY_SPEED 0
 #define LOW_SPEED 40
 #define ULTRALOW_SPEED 30
-#define RAMP_SPEED 50
+#define RAMP_SPEED 60
 
 #define ONE_WIRE_BUS 7
 
@@ -69,7 +69,7 @@ void loop() {
 
 
   if (emergency_mode) {
-    setFanspeed(EMERGENCY_SPEED);
+    setFanspeed(EMERGENCY_SPEED,EMERGENCY_SPEED);
     delay(250);
     digitalWrite(EMERGENCY_LED, HIGH);
     delay(250);
@@ -134,7 +134,7 @@ int getFanSpeed(float temperature, String position) {
   if(ramped && temperature < LOW_TEMP) ramped = false;
 
   if (temperature > HIGH_TEMP) {
-    fanspeed = 100;
+    return 100;
   }
   else if (temperature >= RAMP_TEMP || ramped) {
     fanspeed = RAMP_SPEED;
@@ -155,7 +155,7 @@ int getFanSpeed(float temperature, String position) {
     }
     else fan_front_off = false;
   }
-  else if (position == "back")  {
+  else if (position == "back")  {    
     if (fan_back_off && temperature < (OFF_TEMP + BACK_ON_OFFSET)) {
       fanspeed = 0;
     }
