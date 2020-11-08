@@ -60,6 +60,8 @@ void setup() {
 
 void loop() {
   int front_fanspeed, back_fanspeed = 0;
+  //attachInterrupt(digitalPinToInterrupt(EMERGENCY_PIN), emergencyMode,RISING);
+  //attachInterrupt(digitalPinToInterrupt(EMERGENCY_PIN), emergencyModeOff,LOW);
   attachInterrupt(digitalPinToInterrupt(EMERGENCY_PIN), switchEmergency, RISING);
   attachInterrupt(digitalPinToInterrupt(FULLSPEED_PIN), switchFullSpeed, RISING);
 
@@ -173,13 +175,21 @@ float measureTemp() {
   return sensors.getTempCByIndex(0);
 }
 
+void emergencyMode(){
+  setFanspeed(0);
+  emergency_mode= true;
+}
+void emergencyModeOff(){
+  emergency_mode= false;
+}
+
 void switchEmergency() {
   emergency_mode = !emergency_mode;
   full_speed_mode = false;
   digitalWrite(FULLSPEED_LED, LOW);
 
   digitalWrite(EMERGENCY_LED, (emergency_mode ? HIGH : LOW));
-  setFanspeedFront((emergency_mode ? EMERGENCY_SPEED : LOW_SPEED));
+  setFanspeed((emergency_mode ? EMERGENCY_SPEED : LOW_SPEED));
 }
 
 void switchFullSpeed() {
