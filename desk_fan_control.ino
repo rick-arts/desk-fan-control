@@ -5,17 +5,17 @@ const word PWM_FREQ_HZ = 25000;
 const word TCNT1_TOP = 16000000 / (2 * PWM_FREQ_HZ);
 
 #define ULTRALOW_TEMP 21
-#define LOW_TEMP 21.5
-#define RAMP_TEMP 22
-#define HIGH_TEMP 26
+#define LOW_TEMP 22
+#define RAMP_TEMP 23
+#define HIGH_TEMP 28
 #define OFF_FRONT_TEMP 15
 #define OFF_BACK_TEMP 10
 #define BACK_ON_OFFSET 2
 
 #define EMERGENCY_SPEED 0
-#define LOW_SPEED 40
+#define LOW_SPEED 50
 #define ULTRALOW_SPEED 30
-#define RAMP_SPEED 60
+#define RAMP_SPEED 70
 
 #define ONE_WIRE_BUS 7
 
@@ -161,7 +161,10 @@ int getFanSpeed(float temperature, String position) {
     if (fan_back_off && temperature < (OFF_TEMP + BACK_ON_OFFSET)) {
       fanspeed = 0;
     }
-    else fan_back_off = false;
+    else{
+      fanspeed += 20;
+      fan_back_off = false;
+    }
   }
 
   if (fanspeed > 100) fanspeed = 100;
