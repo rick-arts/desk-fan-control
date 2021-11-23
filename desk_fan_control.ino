@@ -5,8 +5,8 @@ const word PWM_FREQ_HZ = 25000;
 const word TCNT1_TOP = 16000000 / (2 * PWM_FREQ_HZ);
 
 #define ULTRALOW_TEMP 21
-#define LOW_TEMP 22
-#define RAMP_TEMP 23
+#define LOW_TEMP 24
+#define RAMP_TEMP 26
 #define HIGH_TEMP 28
 #define OFF_FRONT_TEMP 15
 #define OFF_BACK_TEMP 10
@@ -56,14 +56,16 @@ void setup() {
 
   sensors.begin();
   Serial.begin(9600);
+
+  attachInterrupt(digitalPinToInterrupt(EMERGENCY_PIN), switchEmergency, RISING);
+  attachInterrupt(digitalPinToInterrupt(FULLSPEED_PIN), switchFullSpeed, RISING);
 }
 
 void loop() {
   int front_fanspeed, back_fanspeed = 0;
   //attachInterrupt(digitalPinToInterrupt(EMERGENCY_PIN), emergencyMode,RISING);
   //attachInterrupt(digitalPinToInterrupt(EMERGENCY_PIN), emergencyModeOff,LOW);
-  attachInterrupt(digitalPinToInterrupt(EMERGENCY_PIN), switchEmergency, RISING);
-  attachInterrupt(digitalPinToInterrupt(FULLSPEED_PIN), switchFullSpeed, RISING);
+  
 
   float temperature = measureTemp();
   Serial.print("Temperature: ");
@@ -162,7 +164,7 @@ int getFanSpeed(float temperature, String position) {
       fanspeed = 0;
     }
     else{
-      fanspeed += 20;
+      //fanspeed += 20;
       fan_back_off = false;
     }
   }
